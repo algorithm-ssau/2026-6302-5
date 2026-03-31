@@ -2,8 +2,10 @@ from aiogram import Router
 from aiogram.types import Message
 from aiogram.filters import Command
 from aiogram.fsm.context import FSMContext
+from aiogram import F
 
 from keyboards.level_keyboard import level_keyboard
+from keyboards.end_keyboard import end_interview_keyboard
 from states.interview_states import InterviewState
 
 router = Router()
@@ -81,3 +83,12 @@ async def stats_command(message: Message):
         result += f"{emoji} {i['date'][:10]} | {i['level']} | {i['total_score']}/{i['max_score']} ({i['percentage']}%)\n"
     
     await message.answer(result, parse_mode="Markdown")
+
+@router.message(F.text == "❌ Завершить интервью")
+async def finish_interview_from_start(message: Message, state: FSMContext):
+    """Завершить интервью из главного меню"""
+    await state.clear()
+    await message.answer(
+        "👋 Интервью завершено.\n\nЧтобы начать новое, нажмите /start",
+        reply_markup=level_keyboard()
+    )

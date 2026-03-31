@@ -1,12 +1,14 @@
 import uuid
 import os
-import re  # ✅ ДОБАВИТЬ ЭТУ СТРОКУ В НАЧАЛО ФАЙЛА
+import re  
 
 from aiogram import Router, F
 from aiogram.types import Message
 from aiogram.fsm.context import FSMContext
 from aiogram.types import CallbackQuery
 from keyboards.skip_keyboard import skip_button
+from keyboards.level_keyboard import level_keyboard
+from keyboards.end_keyboard import end_interview_keyboard
 
 from states.interview_states import InterviewState
 from services.interview_service import get_questions, get_next_question
@@ -86,6 +88,11 @@ async def choose_level(message: Message, state: FSMContext):
         reply_markup=skip_button()
     )
 
+    # Меняем клавиатуру внизу (текст не пустой!)
+    await message.answer(
+        "✅ Интервью активно! Для ответа пришлите голосовое сообщение🎤",
+        reply_markup=end_interview_keyboard()
+    )
 
 @router.message(InterviewState.answering, F.voice)
 async def handle_voice(message: Message, state: FSMContext):
@@ -178,4 +185,4 @@ async def handle_voice(message: Message, state: FSMContext):
 """
         await message.answer(summary)
         await state.clear()
-    
+
