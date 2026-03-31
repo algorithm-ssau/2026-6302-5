@@ -1,5 +1,6 @@
 import uuid
 import os
+import re  # ✅ ДОБАВИТЬ ЭТУ СТРОКУ В НАЧАЛО ФАЙЛА
 
 from aiogram import Router, F
 from aiogram.types import Message
@@ -23,6 +24,7 @@ async def skip_question(callback: CallbackQuery, state: FSMContext):
     data = await state.get_data()
     index = data["index"]
     questions = data["questions"]
+    total_questions = len(questions)
     
     # Пропускаем вопрос (не оцениваем)
     index += 1
@@ -30,9 +32,34 @@ async def skip_question(callback: CallbackQuery, state: FSMContext):
     
     if next_q:
         await state.update_data(index=index)
-        await callback.message.answer(f"Следующий вопрос:\n{next_q}")
+        await callback.message.answer(
+            f"⏭ Вопрос пропущен\n\n"
+            f"Вопрос {index + 1} из {total_questions}:\n{next_q}",
+            reply_markup=skip_button()
+        )
     else:
-        await callback.message.answer("🎉 Интервью завершено!")
+        # Подсчет итоговых баллов при досрочном завершении
+        total_score = data.get("total_score", 0)
+        max_score = total_questions * 10
+        percentage = (total_score / max_score) * 100 if max_score > 0 else 0
+        
+        summary = f"""
+🎉 Интервью завершено! 🎉
+
+📊 Результаты:
+━━━━━━━━━━━━━━━━━━━━
+✅ Набрано баллов: {total_score} / {max_score}
+📈 Процент: {percentage:.1f}%
+
+💬 Оценка:
+{"🌟 Отлично! Вы готовы к повышению!" if percentage >= 80 else 
+"👍 Хорошо, но есть куда расти" if percentage >= 60 else
+"📚 Рекомендуем подтянуть теорию"}
+━━━━━━━━━━━━━━━━━━━━
+
+Спасибо за участие! /start для новой попытки
+"""
+        await callback.message.answer(summary)
         await state.clear()
     
     await callback.message.delete()
@@ -41,6 +68,7 @@ async def skip_question(callback: CallbackQuery, state: FSMContext):
 async def choose_level(message: Message, state: FSMContext):
     level = message.text
     questions = get_questions(level)
+    total_questions = len(questions)
 
     await state.update_data(
         level=level,
@@ -52,9 +80,10 @@ async def choose_level(message: Message, state: FSMContext):
     await state.set_state(InterviewState.answering)
 
     await message.answer(
-    f"Вопрос 1:\n{questions[0]}",
-    reply_markup=skip_button()
-)
+        f"📋 Всего вопросов: {total_questions}\n\n"
+        f"Вопрос 1 из {total_questions}:\n{questions[0]}",
+        reply_markup=skip_button()
+    )
 
 
 @router.message(InterviewState.answering, F.voice)
@@ -64,6 +93,7 @@ async def handle_voice(message: Message, state: FSMContext):
     index = data["index"]
     questions = data["questions"]
     question = questions[index]
+    total_questions = len(questions)
 
     await message.answer("🎙 Обрабатываю голос...")
 
@@ -89,6 +119,17 @@ async def handle_voice(message: Message, state: FSMContext):
 
     await message.answer(f"📊 {result}")
 
+    # Парсим оценку из ответа GigaChat
+    score_match = re.search(r'(\d+)/10', result)
+    current_score = 0
+    if score_match:
+        current_score = int(score_match.group(1))
+        total_score = data.get("total_score", 0) + current_score
+        await state.update_data(total_score=total_score)
+        await message.answer(f"✅ +{current_score} баллов")
+    else:
+        await message.answer("⚠️ Не удалось распознать оценку")
+
     # следующий вопрос
     index += 1
     next_q = get_next_question(questions, index)
@@ -96,9 +137,33 @@ async def handle_voice(message: Message, state: FSMContext):
     if next_q:
         await state.update_data(index=index)
         await message.answer(
-            f"Следующий вопрос:\n{next_q}",
-            reply_markup=skip_button()  # ✅ Добавлена кнопка
+            f"📊 Текущий счет: {total_score if score_match else data.get('total_score', 0)}/{total_questions * 10}\n\n"
+            f"Вопрос {index + 1} из {total_questions}:\n{next_q}",
+            reply_markup=skip_button()
         )
     else:
-        await message.answer("🎉 Интервью завершено!")
+        # Интервью завершено - показываем итоговый результат
+        final_score = data.get("total_score", 0)
+        if score_match:
+            final_score = total_score
+        max_score = total_questions * 10
+        percentage = (final_score / max_score) * 100
+        
+        summary = f"""
+🎉 Интервью завершено! 🎉
+
+📊 Результаты:
+━━━━━━━━━━━━━━━━━━━━
+✅ Набрано баллов: {final_score} / {max_score}
+📈 Процент: {percentage:.1f}%
+
+💬 Оценка:
+{"🌟 Отлично! Вы готовы к повышению!" if percentage >= 80 else 
+"👍 Хорошо, но есть куда расти" if percentage >= 60 else
+"📚 Рекомендуем подтянуть теорию"}
+━━━━━━━━━━━━━━━━━━━━
+
+Спасибо за участие! /start для новой попытки
+"""
+        await message.answer(summary)
         await state.clear()
