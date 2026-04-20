@@ -84,11 +84,3 @@ async def stats_command(message: Message):
     
     await message.answer(result, parse_mode="Markdown")
 
-@router.message(F.text == "❌ Завершить интервью")
-async def finish_interview_from_start(message: Message, state: FSMContext):
-    """Завершить интервью из главного меню"""
-    await state.clear()
-    await message.answer(
-        "👋 Интервью завершено.\n\nЧтобы начать новое, нажмите /start",
-        reply_markup=level_keyboard()
-    )

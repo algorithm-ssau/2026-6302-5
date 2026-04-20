@@ -82,16 +82,16 @@ async def choose_level(message: Message, state: FSMContext):
 
     await state.set_state(InterviewState.answering)
 
-    await message.answer(
-        f"📋 Всего вопросов: {total_questions}\n\n"
-        f"Вопрос 1 из {total_questions}:\n{questions[0]}",
-        reply_markup=skip_button()
-    )
-
     # Меняем клавиатуру внизу (текст не пустой!)
     await message.answer(
         "✅ Интервью активно! Для ответа пришлите голосовое сообщение🎤",
         reply_markup=end_interview_keyboard()
+    )
+
+    await message.answer(
+        f"📋 Всего вопросов: {total_questions}\n\n"
+        f"Вопрос 1 из {total_questions}:\n{questions[0]}",
+        reply_markup=skip_button()
     )
 
 @router.message(InterviewState.answering, F.voice)
@@ -186,3 +186,56 @@ async def handle_voice(message: Message, state: FSMContext):
         await message.answer(summary)
         await state.clear()
 
+@router.message(F.text == "❌ Завершить интервью")
+async def finish_interview_early(message: Message, state: FSMContext):
+    """Досрочное завершение интервью"""
+    
+    data = await state.get_data()
+    
+    # Если интервью не активно
+    if not data:
+        await message.answer(
+            "👋 Нет активного интервью.\n/start чтобы начать",
+            reply_markup=level_keyboard()
+        )
+        return
+    
+    # Достаем данные
+    total_questions = len(data.get("questions", []))
+    total_score = data.get("total_score", 0)
+    max_score = total_questions * 10
+    
+    # Считаем процент
+    percentage = (total_score / max_score * 100) if max_score > 0 else 0
+    
+    # Сохраняем в статистику
+    add_interview_result(
+        user_id=message.from_user.id,
+        level=data.get("level", "Unknown"),
+        total_questions=total_questions,
+        total_score=total_score,
+        max_score=max_score,
+        answers=[]
+    )
+    
+    # Показываем результат
+    summary = f"""
+🎉 Интервью завершено досрочно!
+
+📊 Результаты:
+━━━━━━━━━━━━━━━━━━━━
+✅ Вопросов пройдено: {data.get('index', 0)} из {total_questions}
+✅ Набрано баллов: {total_score} / {max_score}
+📈 Процент: {percentage:.1f}%
+
+💬 Оценка:
+{"🌟 Отлично!" if percentage >= 80 else 
+"👍 Хорошо" if percentage >= 60 else
+"📚 Надо подтянуть"}
+━━━━━━━━━━━━━━━━━━━━
+
+/start для новой попытки
+"""
+    
+    await message.answer(summary, reply_markup=level_keyboard())
+    await state.clear()
