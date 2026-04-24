@@ -60,6 +60,18 @@ async def skip_question(callback: CallbackQuery, state: FSMContext):
             reply_markup=skip_button()
         )
     else:
+
+        answers = data.get("answers", [])
+
+        answers.append({
+            "question": questions[index - 1] if index > 0 else "SKIPPED",
+            "answer": "SKIPPED",
+            "score": 0,
+            "feedback": "User skipped question"
+        })
+
+        await state.update_data(answers=answers)
+
         await finish_interview(
             state=state,
             user_id=callback.from_user.id,
@@ -140,20 +152,49 @@ async def handle_voice(message: Message, state: FSMContext):
         GIGACHAT_CLIENT_SECRET
     )
 
-    result = await evaluate_answer(token, question, text)
+    evaluation = await evaluate_answer(token, question, text)
 
-    await message.answer(f"📊 {result}")
+    score = evaluation.get("score", 0)
+    pros = evaluation.get("pros", [])
+    cons = evaluation.get("cons", [])
+    feedback = evaluation.get("feedback", "")
+    recommendations = evaluation.get("recommendations", [])
+
+    answer_record = {
+        "question": question,
+        "answer": text,
+        "score": score,
+        "feedback": feedback
+    }
+
+    answers = data.get("answers", [])
+    answers.append(answer_record)
+
+    await state.update_data(answers=answers)
+
+    await message.answer(
+        f"""📊 Оценка: {score}/10
+
+    💪 Плюсы:
+    {chr(10).join('• ' + p for p in pros) if pros else '—'}
+
+    ⚠️ Минусы:
+    {chr(10).join('• ' + c for c in cons) if cons else '—'}
+
+    🧠 Фидбек:
+    {feedback}
+
+    🚀 Рекомендации:
+    {chr(10).join('• ' + r for r in recommendations) if recommendations else '—'}
+    """
+    )
 
     # Парсим оценку из ответа GigaChat
-    score_match = re.search(r'(\d+)/10', result)
-    current_score = 0
-    if score_match:
-        current_score = int(score_match.group(1))
-    else:
-        await message.answer("⚠️ Не удалось распознать оценку")
+    current_score = int(score)
 
-    total_score = data.get("total_score", 0) + current_score
-    await state.update_data(total_score=total_score)
+    data = await state.get_data()
+    new_score = data.get("total_score", 0) + current_score
+    await state.update_data(total_score=new_score)
 
     # следующий вопрос
     index += 1
@@ -164,7 +205,7 @@ async def handle_voice(message: Message, state: FSMContext):
         await state.update_data(index=index)
 
         await message.answer(
-            f"📊 Текущий счет: {data.get('total_score', 0)}/{total_questions * 10}\n\n"
+            f"📊 Текущий счет: {new_score}/{total_questions * 10}\n\n"
             f"Вопрос {index + 1} из {total_questions}:\n{next_q}",
             reply_markup=skip_button()
         )

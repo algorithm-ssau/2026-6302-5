@@ -184,6 +184,8 @@ async def finish_interview(state, user_id: int, total_questions: int, message=No
     print("END OF INTERVIEW")
     print("FINAL SCORE:", total_score)
 
+    answers = data.get("answers", [])
+
     # Сохраняем
     add_interview_result(
         user_id=user_id,
@@ -191,7 +193,7 @@ async def finish_interview(state, user_id: int, total_questions: int, message=No
         total_questions=total_questions,
         total_score=total_score,
         max_score=max_score,
-        answers=[]
+        answers=answers
     )
 
     summary = f"""

@@ -1,5 +1,5 @@
 import aiohttp
-
+import json
 
 async def evaluate_answer(token, question, answer):
     url = "https://gigachat.devices.sberbank.ru/api/v1/chat/completions"
@@ -10,23 +10,26 @@ async def evaluate_answer(token, question, answer):
     }
 
     prompt = f"""
-Ты строгий технический интервьюер.
+    Ты строгий технический интервьюер.
 
-Вопрос:
-{question}
+    Вопрос:
+    {question}
 
-Ответ:
-{answer}
+    Ответ:
+    {answer}
 
-Оцени от 0 до 10 и дай краткий фидбек.
+    Оцени ответ по техническим критериям.
 
-Формат:
-Оценка: X/10
-Плюсы:
--
-Минусы:
--
-"""
+    Верни ТОЛЬКО JSON без пояснений в таком формате:
+
+    {{
+      "score": число от 0 до 10,
+      "pros": ["плюс 1", "плюс 2"],
+      "cons": ["минус 1", "минус 2"],
+      "feedback": "краткий общий комментарий",
+      "recommendations": ["что улучшить 1", "что улучшить 2"]
+    }}
+    """
 
     json_data = {
         "model": "GigaChat",
@@ -37,4 +40,18 @@ async def evaluate_answer(token, question, answer):
     async with aiohttp.ClientSession() as session:
         async with session.post(url, headers=headers, json=json_data, ssl=False) as resp:
             result = await resp.json()
-            return result["choices"][0]["message"]["content"]
+            result_text = result["choices"][0]["message"]["content"]
+
+            try:
+                parsed = json.loads(result_text)
+            except json.JSONDecodeError:
+                # fallback, если модель вернула невалидный JSON
+                parsed = {
+                    "score": 0,
+                    "pros": [],
+                    "cons": [],
+                    "feedback": result_text,
+                    "recommendations": []
+                }
+
+            return parsed

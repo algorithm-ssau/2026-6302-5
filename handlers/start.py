@@ -6,6 +6,9 @@ from aiogram.types import Message
 from keyboards.topic_keyboard import topic_keyboard
 from states.interview_states import InterviewState
 
+from services.plot_service import create_progress_chart
+from aiogram.types import FSInputFile
+
 router = Router()
 
 
@@ -83,3 +86,13 @@ async def stats_command(message: Message):
         result += f"{emoji} {i['date'][:10]} | {i['level']} | {i['total_score']}/{i['max_score']} ({i['percentage']}%)\n"
 
     await message.answer(result, parse_mode="Markdown")
+
+    chart_path = create_progress_chart(interviews)
+
+    if chart_path:
+        photo = FSInputFile(chart_path)
+
+        await message.answer_photo(
+            photo=photo,
+            caption="📊 График твоего прогресса"
+        )

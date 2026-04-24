@@ -36,36 +36,6 @@
   "993054213": {
     "interviews": [
       {
-        "id": 1,
-        "date": "2026-04-24 19:57:40",
-        "level": "Junior",
-        "total_questions": 10,
-        "total_score": 4,
-        "max_score": 100,
-        "percentage": 4.0,
-        "answers": []
-      },
-      {
-        "id": 2,
-        "date": "2026-04-24 19:58:07",
-        "level": "Junior",
-        "total_questions": 10,
-        "total_score": 0,
-        "max_score": 100,
-        "percentage": 0.0,
-        "answers": []
-      },
-      {
-        "id": 3,
-        "date": "2026-04-24 19:59:05",
-        "level": "Junior",
-        "total_questions": 10,
-        "total_score": 0,
-        "max_score": 100,
-        "percentage": 0.0,
-        "answers": []
-      },
-      {
         "id": 4,
         "date": "2026-04-24 20:03:09",
         "level": "Junior",
@@ -134,6 +104,67 @@
         "max_score": 100,
         "percentage": 0.0,
         "answers": []
+      },
+      {
+        "id": 11,
+        "date": "2026-04-24 20:27:05",
+        "level": "Junior",
+        "total_questions": 10,
+        "total_score": 6,
+        "max_score": 100,
+        "percentage": 6.0,
+        "answers": []
+      },
+      {
+        "id": 11,
+        "date": "2026-04-24 20:33:48",
+        "level": "Junior",
+        "total_questions": 9,
+        "total_score": 6,
+        "max_score": 90,
+        "percentage": 6.7,
+        "answers": []
+      },
+      {
+        "id": 11,
+        "date": "2026-04-24 20:39:30",
+        "level": "Junior",
+        "total_questions": 9,
+        "total_score": 13,
+        "max_score": 90,
+        "percentage": 14.4,
+        "answers": [
+          {
+            "question": "Что такое JOIN?",
+            "answer": " join это обитерение таблицу",
+            "score": 2,
+            "feedback": "Попытка объяснить концепцию JOIN неверна."
+          },
+          {
+            "question": "Что такое GROUP BY?",
+            "answer": " Это то, как мы группируем ответ.",
+            "score": 3,
+            "feedback": "Дан базовый уровень понимания, но отсутствует техническая детализация."
+          },
+          {
+            "question": "Что такое ORDER BY?",
+            "answer": " Ордер-by это то, в каком порядке у нас будет выдан select.",
+            "score": 4,
+            "feedback": "Дана общая информация, но недостаточно подробно."
+          },
+          {
+            "question": "Что такое LIMIT?",
+            "answer": " Лимит это окраничение на количество записи, которые будут выданы при selector запросе.",
+            "score": 4,
+            "feedback": "Определение неполное и недостаточно точное."
+          },
+          {
+            "question": "Что такое индекс?",
+            "answer": "SKIPPED",
+            "score": 0,
+            "feedback": "User skipped question"
+          }
+        ]
       }
     ]
   }
