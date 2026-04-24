@@ -1,9 +1,13 @@
+from aiogram.types import ReplyKeyboardRemove
+
+from keyboards.topic_keyboard import topic_keyboard
+
 # Новая структура: тема → уровень → список вопросов (по 2 вопроса для теста)
 QUESTIONS = {
     "Python": {
         "Junior": [
             "Что такое PEP8?",
-            "Чем отличается list от tuple?"
+            "Чем отличается list от tuple?",
             "Что такое GIL?",
             "Какие типы данных в Python являются неизменяемыми?",
             "Что такое декоратор?",
@@ -15,9 +19,8 @@ QUESTIONS = {
         ],
         "Middle": [
             "Как работает сборщик мусора в Python?",
-            "Что такое asyncio?"
-            "Чем отличается процесс от потока?",
             "Что такое asyncio?",
+            "Чем отличается процесс от потока?",
             "Как работает GIL и как его обойти?",
             "Что такое дескрипторы?",
             "Какие паттерны проектирования используются в Python?",
@@ -27,7 +30,7 @@ QUESTIONS = {
         ],
         "Senior": [
             "Как устроен интерпретатор CPython?",
-            "Что такое GIL-free Python?"
+            "Что такое GIL-free Python?",
             "Как оптимизировать производительность Python-кода?",
             "Что такое профилирование и какие инструменты используете?",
             "Как отлаживать утечки памяти в Python?",
@@ -41,9 +44,8 @@ QUESTIONS = {
     "Java": {
         "Junior": [
             "Что такое JVM?",
-            "Чем отличается `==` от `equals()`?"
-            "Что такое public static void main?",
             "Чем отличается `==` от `equals()`?",
+            "Что такое public static void main?",
             "Что такое конструктор?",
             "Что такое перегрузка методов?",
             "Что такое наследование?",
@@ -53,9 +55,8 @@ QUESTIONS = {
         ],
         "Middle": [
             "Как работает сборщик мусора в Java?",
-            "Что такое Stream API?"
-            "Чем отличается synchronized от ReentrantLock?",
             "Что такое Stream API?",
+            "Чем отличается synchronized от ReentrantLock?",
             "Что такое Optional?",
             "Как работает HashMap?",
             "Что такое исключения (checked vs unchecked)?",
@@ -65,7 +66,7 @@ QUESTIONS = {
         ],
         "Senior": [
             "Как работает загрузка классов в Java?",
-            "Что такое Java Memory Model?"
+            "Что такое Java Memory Model?",
             "Как оптимизировать GC?",
             "Что такое JMH?",
             "Как отлаживать многопоточные приложения?",
@@ -79,9 +80,8 @@ QUESTIONS = {
     "SQL": {
         "Junior": [
             "Что такое JOIN?",
-            "Чем отличается INNER JOIN от LEFT JOIN?"
-            "Что такое JOIN?",
             "Чем отличается INNER JOIN от LEFT JOIN?",
+            "Что такое JOIN?",
             "Что такое GROUP BY?",
             "Что такое ORDER BY?",
             "Что такое LIMIT?",
@@ -91,7 +91,7 @@ QUESTIONS = {
         ],
         "Middle": [
             "Что такое транзакции и ACID?",
-            "Что такое оконные функции?"
+            "Что такое оконные функции?",
             "Что такое UNION vs UNION ALL?",
             "Как работают индексы (B-Tree, Hash)?",
             "Что такое EXPLAIN?",
@@ -103,7 +103,7 @@ QUESTIONS = {
         ],
         "Senior": [
             "Что такое шардирование и партиционирование?",
-            "Что такое CAP теорема?"
+            "Что такое CAP теорема?",
             "Как настроить репликацию?",
             "Что такое CAP теорема?",
             "Как выбрать между SQL и NoSQL?",
@@ -117,7 +117,7 @@ QUESTIONS = {
     "Git": {
         "Junior": [
             "Что такое Git?",
-            "Чем отличается git pull от git fetch?"
+            "Чем отличается git pull от git fetch?",
              "Что такое commit?",
             "Что такое branch?",
             "Как создать новую ветку?",
@@ -129,7 +129,7 @@ QUESTIONS = {
         ],
         "Middle": [
             "Чем отличается rebase от merge?",
-            "Что такое cherry-pick?"
+            "Что такое cherry-pick?",
             "Что такое stash?",
             "Как отменить коммит?",
             "Что такое reset (soft/hard/mixed)?",
@@ -141,8 +141,7 @@ QUESTIONS = {
         ],
         "Senior": [
             "Как настроить CI/CD с Git?",
-            "Что такое Git hooks?"
-             "Что такое Git hooks?",
+            "Что такое Git hooks?",
             "Как работает Git под капотом? (объекты, деревья)",
             "Как восстановить удаленную ветку?",
             "Как мигрировать репозиторий из SVN в Git?",
@@ -170,3 +169,53 @@ def get_questions(topic: str, level: str):
 def get_next_question(questions: list, index: int):
     """Возвращает следующий вопрос по индексу"""
     return questions[index] if index < len(questions) else None
+
+async def finish_interview(state, user_id: int, total_questions: int, message=None):
+    from services.stats_service import add_interview_result
+
+    data = await state.get_data()
+
+    total_score = data.get("total_score", 0)
+    level = data.get("level", "Unknown")
+
+    max_score = total_questions * 10
+    percentage = (total_score / max_score) * 100 if max_score > 0 else 0
+
+    print("END OF INTERVIEW")
+    print("FINAL SCORE:", total_score)
+
+    # Сохраняем
+    add_interview_result(
+        user_id=user_id,
+        level=level,
+        total_questions=total_questions,
+        total_score=total_score,
+        max_score=max_score,
+        answers=[]
+    )
+
+    summary = f"""
+🎉 Интервью завершено! 🎉
+
+📊 Результаты:
+━━━━━━━━━━━━━━━━━━━
+✅ Набрано баллов: {total_score} / {max_score}
+📈 Процент: {percentage:.1f}%
+
+💬 Оценка:
+{"🌟 Отлично! Вы готовы к повышению!" if percentage >= 80 else 
+"👍 Хорошо, но есть куда расти" if percentage >= 60 else
+"📚 Рекомендуем подтянуть теорию"}
+━━━━━━━━━━━━━━━━━━━
+
+Спасибо за участие! 
+/start для новой попытки
+/stats для просмотра статистики
+"""
+
+    if message:
+        await message.answer(
+            summary,
+            reply_markup=ReplyKeyboardRemove())
+
+    await state.clear()

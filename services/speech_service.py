@@ -1,11 +1,13 @@
-import whisper
+import os
 import subprocess
 import uuid
-import os
+
+import whisper
 
 AUDIO_DIR = "media/audio"
 
 model = whisper.load_model("small")
+
 
 def convert_to_wav(input_file, output_file):
     subprocess.run([
@@ -15,6 +17,7 @@ def convert_to_wav(input_file, output_file):
         "-ac", "1",
         output_file
     ])
+
 
 def transcribe_audio(file_path: str) -> str:
     wav_filename = f"{uuid.uuid4()}.wav"

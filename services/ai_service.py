@@ -1,5 +1,6 @@
 import aiohttp
 
+
 async def evaluate_answer(token, question, answer):
     url = "https://gigachat.devices.sberbank.ru/api/v1/chat/completions"
 

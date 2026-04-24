@@ -1,15 +1,13 @@
 from aiogram import Router
-from aiogram.types import Message
 from aiogram.filters import Command
 from aiogram.fsm.context import FSMContext
-from aiogram import F
+from aiogram.types import Message
 
-from keyboards.level_keyboard import level_keyboard
-from keyboards.end_keyboard import end_interview_keyboard
-from states.interview_states import InterviewState
 from keyboards.topic_keyboard import topic_keyboard
+from states.interview_states import InterviewState
 
 router = Router()
+
 
 @router.message(Command("start"))
 async def start(message: Message, state: FSMContext):
@@ -20,10 +18,11 @@ async def start(message: Message, state: FSMContext):
         reply_markup=topic_keyboard()
     )
 
+
 @router.message(Command("help"))
 async def help_command(message: Message):
     """Отправляет инструкцию по использованию бота"""
-    
+
     help_text = """
 🤖 *AI-Интервьюер — инструкция*
 
@@ -47,7 +46,7 @@ async def help_command(message: Message):
 
 Удачи! 🚀
 """
-    
+
     await message.answer(
         help_text,
         parse_mode="Markdown"
@@ -58,9 +57,9 @@ async def help_command(message: Message):
 async def stats_command(message: Message):
     """Показывает статистику интервью"""
     from services.stats_service import load_stats
-    
+
     stats = load_stats(message.from_user.id)
-    
+
     if not stats or "interviews" not in stats or not stats["interviews"]:
         await message.answer(
             "📊 *Статистика*\n\n"
@@ -69,19 +68,18 @@ async def stats_command(message: Message):
             parse_mode="Markdown"
         )
         return
-    
+
     interviews = stats["interviews"]
     total = len(interviews)
     avg_percentage = sum(i["percentage"] for i in interviews) / total
-    
+
     result = f"📊 *Ваша статистика*\n\n"
     result += f"*Всего интервью:* {total}\n"
     result += f"*Средний результат:* {avg_percentage:.1f}%\n\n"
     result += f"*Последние интервью:*\n"
-    
+
     for i in interviews[-3:]:
         emoji = "🟢" if i["percentage"] >= 80 else "🟡" if i["percentage"] >= 60 else "🔴"
         result += f"{emoji} {i['date'][:10]} | {i['level']} | {i['total_score']}/{i['max_score']} ({i['percentage']}%)\n"
-    
-    await message.answer(result, parse_mode="Markdown")
 
+    await message.answer(result, parse_mode="Markdown")

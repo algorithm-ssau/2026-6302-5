@@ -1,5 +1,7 @@
-import aiohttp
 import uuid
+
+import aiohttp
+
 
 async def get_access_token(client_id, client_secret):
     url = "https://ngw.devices.sberbank.ru:9443/api/v2/oauth"
