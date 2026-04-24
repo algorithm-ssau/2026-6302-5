@@ -175,6 +175,10 @@ async def finish_interview(state, user_id: int, total_questions: int, message=No
 
     data = await state.get_data()
 
+    task = data.get("timer_task")
+    if task:
+        task.cancel()
+
     total_score = data.get("total_score", 0)
     level = data.get("level", "Unknown")
 

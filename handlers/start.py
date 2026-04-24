@@ -17,7 +17,7 @@ async def start(message: Message, state: FSMContext):
     await state.set_state(InterviewState.choosing_topic)
     await message.answer(
         "🚀 Привет! Я AI-интервьюер\n\n"
-        "Выберите тему для интервью:",
+        "Выберите тему:",
         reply_markup=topic_keyboard()
     )
 

@@ -3,3 +3,5 @@
 *.wav
 .env
 .venv
+media/
+data/
