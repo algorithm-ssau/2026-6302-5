@@ -292,6 +292,10 @@ async def go_next_question(message: Message, state: FSMContext, question_id: int
         answered_current=False
     )
 
+    total_score = data.get("total_score", 0)
+    max_possible = total_questions * 10
+    await message.answer(f"📈 Набрано очков: {total_score}/{max_possible}")
+
     await message.answer(
         f"📊 Переход к следующему вопросу\n\n"
         f"Вопрос {new_index + 1}/{total_questions}:\n{next_q}",
