@@ -1,5 +1,7 @@
-import aiohttp
 import json
+
+import aiohttp
+
 
 async def evaluate_answer(token, question, answer):
     url = "https://gigachat.devices.sberbank.ru/api/v1/chat/completions"
@@ -10,7 +12,8 @@ async def evaluate_answer(token, question, answer):
     }
 
     prompt = f"""
-    Ты строгий технический интервьюер.
+    Ты строгий технический интервьюер. Твоя задача очень строго оценить ответ на заданный вопрос. 
+    Если ответ не содержит конструктивной информации то ставь score 0 баллов.
 
     Вопрос:
     {question}

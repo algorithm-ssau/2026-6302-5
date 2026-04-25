@@ -1,8 +1,6 @@
-import os
-import re
-import uuid
 import asyncio
-import time
+import os
+import uuid
 
 from aiogram import Router, F
 from aiogram.fsm.context import FSMContext
@@ -18,7 +16,7 @@ from keyboards.topic_keyboard import topic_keyboard
 from services.ai_service import evaluate_answer
 from services.gigachat_auth import get_access_token
 from services.interview_service import finish_interview
-from services.interview_service import get_questions, get_next_question, get_topics
+from services.interview_service import get_questions, get_topics
 from services.speech_service import transcribe_audio
 from states.interview_states import InterviewState
 
@@ -42,6 +40,7 @@ async def choose_topic(message: Message, state: FSMContext):
         reply_markup=level_keyboard()
     )
 
+
 @router.message(InterviewState.choosing_level)
 async def choose_level(message: Message, state: FSMContext):
     level = message.text
@@ -53,6 +52,7 @@ async def choose_level(message: Message, state: FSMContext):
         f"🎚 Уровень: {level}\n\nВыберите режим:",
         reply_markup=mode_keyboard()
     )
+
 
 @router.message(InterviewState.choosing_mode)
 async def choose_mode(message: Message, state: FSMContext):
@@ -165,6 +165,12 @@ async def handle_text_answer(message: Message, state: FSMContext):
     evaluation = await evaluate_answer(token, question, text)
 
     score = evaluation.get("score", 0)
+    pros = evaluation.get("pros", [])
+    cons = evaluation.get("cons", [])
+    feedback = evaluation.get("feedback", "")
+    recommendations = evaluation.get("recommendations", [])
+
+    score = evaluation.get("score", 0)
     if is_real:
         score = max(0, score - 1)
 
@@ -182,8 +188,24 @@ async def handle_text_answer(message: Message, state: FSMContext):
         total_score=data.get("total_score", 0) + score
     )
 
-    await message.answer(f"📊 Оценка: {score}/10\n\n{evaluation.get('feedback', '')}")
+    await message.answer(
+        f"""📊 Оценка: {score}/10
+
+    💪 Плюсы:
+    {chr(10).join('• ' + p for p in pros) if pros else '—'}
+
+    ⚠️ Минусы:
+    {chr(10).join('• ' + c for c in cons) if cons else '—'}
+
+    🧠 Фидбек:
+    {feedback}
+
+    🚀 Рекомендации:
+    {chr(10).join('• ' + r for r in recommendations) if recommendations else '—'}
+    """
+    )
     await go_next_question(message, state, index, is_real)
+
 
 @router.message(InterviewState.answering, F.voice)
 async def handle_voice(message: Message, state: FSMContext):

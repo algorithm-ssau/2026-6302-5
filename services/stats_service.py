@@ -41,7 +41,6 @@ def add_interview_result(
         max_score: int,
         answers: List[Dict]
 ):
-    print("🔥 ADD INTERVIEW CALLED")
     stats = load_stats(user_id)
 
     if "interviews" not in stats:

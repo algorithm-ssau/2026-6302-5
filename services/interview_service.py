@@ -1,6 +1,4 @@
 from aiogram.types import ReplyKeyboardRemove
-from keyboards.restart_keyboard import restart_keyboard
-from keyboards.topic_keyboard import topic_keyboard
 
 # Новая структура: тема → уровень → список вопросов (по 2 вопроса для теста)
 QUESTIONS = {
@@ -118,7 +116,7 @@ QUESTIONS = {
         "Junior": [
             "Что такое Git?",
             "Чем отличается git pull от git fetch?",
-             "Что такое commit?",
+            "Что такое commit?",
             "Что такое branch?",
             "Как создать новую ветку?",
             "Как переключиться между ветками?",
@@ -154,21 +152,26 @@ QUESTIONS = {
     }
 }
 
+
 def get_topics():
     """Возвращает список доступных тем"""
     return list(QUESTIONS.keys())
+
 
 def get_levels_for_topic(topic: str):
     """Возвращает список уровней для темы"""
     return list(QUESTIONS.get(topic, {}).keys())
 
+
 def get_questions(topic: str, level: str):
     """Возвращает вопросы для темы и уровня"""
     return QUESTIONS.get(topic, {}).get(level, [])
 
+
 def get_next_question(questions: list, index: int):
     """Возвращает следующий вопрос по индексу"""
     return questions[index] if index < len(questions) else None
+
 
 async def finish_interview(state, user_id: int, total_questions: int, message=None):
     from services.stats_service import add_interview_result
@@ -184,9 +187,6 @@ async def finish_interview(state, user_id: int, total_questions: int, message=No
 
     max_score = total_questions * 10
     percentage = (total_score / max_score) * 100 if max_score > 0 else 0
-
-    print("END OF INTERVIEW")
-    print("FINAL SCORE:", total_score)
 
     answers = data.get("answers", [])
 
@@ -209,9 +209,9 @@ async def finish_interview(state, user_id: int, total_questions: int, message=No
 📈 Процент: {percentage:.1f}%
 
 💬 Оценка:
-{"🌟 Отлично! Вы готовы к повышению!" if percentage >= 80 else 
-"👍 Хорошо, но есть куда расти" if percentage >= 60 else
-"📚 Рекомендуем подтянуть теорию"}
+{"🌟 Отлично! Вы готовы к повышению!" if percentage >= 80 else
+    "👍 Хорошо, но есть куда расти" if percentage >= 60 else
+    "📚 Рекомендуем подтянуть теорию"}
 ━━━━━━━━━━━━━━━━━━━
 
 Спасибо за участие! 
@@ -223,8 +223,4 @@ async def finish_interview(state, user_id: int, total_questions: int, message=No
         await message.answer(
             summary,
             reply_markup=ReplyKeyboardRemove())
-        await message.answer(
-            "✅ Интервью завершено!\n\n"
-            "Хотите пройти еще раз?",
-            reply_markup=restart_keyboard())
     await state.clear()
