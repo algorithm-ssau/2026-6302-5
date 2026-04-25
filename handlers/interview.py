@@ -138,6 +138,53 @@ async def skip_question(callback: CallbackQuery, state: FSMContext):
     await callback.message.delete()
 
 
+@router.message(InterviewState.answering, F.text, ~F.text.in_(["❌ Завершить интервью"]))
+async def handle_text_answer(message: Message, state: FSMContext):
+    """Обработка текстовых ответов (не только голос)"""
+    data = await state.get_data()
+
+    if data.get("answered_current"):
+        await message.answer("Вы уже ответили на этот вопрос")
+        return
+
+    # Отменяем таймер если есть
+    task = data.get("timer_task")
+    if task:
+        task.cancel()
+
+    index = data["index"]
+    questions = data["questions"]
+    question = questions[index]
+    is_real = data.get("is_real", False)
+    text = message.text
+
+    await state.update_data(answered_current=True)
+
+    # Получаем токен и оценку (как в voice обработчике)
+    token = await get_access_token(GIGACHAT_CLIENT_ID, GIGACHAT_CLIENT_SECRET)
+    evaluation = await evaluate_answer(token, question, text)
+
+    score = evaluation.get("score", 0)
+    if is_real:
+        score = max(0, score - 1)
+
+    # Обновляем ответы (как в voice)
+    answers = data.get("answers", [])
+    answers.append({
+        "question": question,
+        "answer": text,
+        "score": score,
+        "feedback": evaluation.get("feedback", "")
+    })
+
+    await state.update_data(
+        answers=answers,
+        total_score=data.get("total_score", 0) + score
+    )
+
+    await message.answer(f"📊 Оценка: {score}/10\n\n{evaluation.get('feedback', '')}")
+    await go_next_question(message, state, index, is_real)
+
 @router.message(InterviewState.answering, F.voice)
 async def handle_voice(message: Message, state: FSMContext):
     data = await state.get_data()
