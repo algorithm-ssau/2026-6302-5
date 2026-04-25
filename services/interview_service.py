@@ -1,5 +1,5 @@
 from aiogram.types import ReplyKeyboardRemove
-
+from keyboards.restart_keyboard import restart_keyboard
 from keyboards.topic_keyboard import topic_keyboard
 
 # Новая структура: тема → уровень → список вопросов (по 2 вопроса для теста)
@@ -223,5 +223,8 @@ async def finish_interview(state, user_id: int, total_questions: int, message=No
         await message.answer(
             summary,
             reply_markup=ReplyKeyboardRemove())
-
+        await message.answer(
+            "✅ Интервью завершено!\n\n"
+            "Хотите пройти еще раз?",
+            reply_markup=restart_keyboard())
     await state.clear()
